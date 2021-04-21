@@ -32,22 +32,24 @@ int main(int argc, char *argv[])
 	int serverSocket = 0;   //socket descriptor for the server socket
 	int clientSocket = 0;   //socket descriptor for the client socket
 	int portNumber = 0;
+    int code = 0;
 
 	portNumber = checkArgs(argc, argv);
+    serverSocket = tcpServerSetup(portNumber);
 
 	// Recieves multiple clients
   while(1)
 	{
-		//create the server socket
-		serverSocket = tcpServerSetup(portNumber);
-	  // wait for client to connect
+	 // wait for client to connect
 	  clientSocket = tcpAccept(serverSocket, DEBUG_FLAG);
-
-	  if(myRecive(clientSocket) <= 0)
-		{
+      
+	  if((code = myRecive(clientSocket)) <= 0)
+	  {
+            printf("%d\n", code);
 			/* close the sockets */
 			close(clientSocket);
-		}
+            serverSocket = tcpServerSetup(portNumber);
+	  }
   }
 
 	close(serverSocket);

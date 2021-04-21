@@ -68,25 +68,35 @@ int myRecive(int clientSocket)
   int pduLen = 0;
   int sent = 0;
   /* variables used for select().*/
-  fd_set readfds;
-  struct timeval t;
-
-
+  struct sockaddr addr;
+  socklen_t addr_len;
+  int val = 0;
+  setupPollSet();
+  addToPollSet(clientSocket); 
+  memset(buff, '\0', MAXBUF);
   while(strcmp(buff, "exit") != 0)
   {
-      t.tv_sec = 1;
+
+      /*t.tv_sec = 1;
       t.tv_usec = 0;
       FD_ZERO(&readfds);
       FD_SET(clientSocket, &readfds);
+      */
 
-      /* Block until recieve the message.
-       * Note: In class notes were used to implement this block of code.*/
-      if(select(clientSocket + 1, &readfds, NULL, NULL, &t) < 0)
+      /* Block until recieve the message.*/
+      if ((val = pollCall(0)) ==  -1)
       {
-        perror("select call");
-        exit(-1);
+         // exit(-1);
       }
+      else if(val == clientSocket)
+      {
+           if (accept(clientSocket, &addr, &addr_len) < 0)
+           {
+               return -1;
+           }
+           addToPollSet(clientSocket); 
 
+      }
       messageLen = recv(clientSocket, &pduLen, LEN_BYTES, MSG_WAITALL);
       /* check to see if recv was succesful or if any closed connect occured.*/
 	    if (messageLen < 0)
@@ -97,7 +107,7 @@ int myRecive(int clientSocket)
       else if (messageLen == 0)
       {
           perror("closed connection");
-          return 1;
+          return 0;
       }
 
       messageLen = recv(clientSocket, buff, MAXBUF, 0);
@@ -111,7 +121,7 @@ int myRecive(int clientSocket)
       else if (messageLen == 0)
       {
           perror("closed connection");
-          return 1;
+          return 0;
       }
 	    printf("recv() Len: %d, PDU Len: %d, Message: %s\n",
               messageLen + 2, pduLen, buff);
