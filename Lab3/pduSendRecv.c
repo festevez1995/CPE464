@@ -97,7 +97,7 @@ int myRecive(int clientSocket)
       else if (messageLen == 0)
       {
           perror("closed connection");
-          return 0;
+          return 1;
       }
 
       messageLen = recv(clientSocket, buff, MAXBUF, 0);
@@ -111,7 +111,7 @@ int myRecive(int clientSocket)
       else if (messageLen == 0)
       {
           perror("closed connection");
-          return 0;
+          return 1;
       }
 	    printf("recv() Len: %d, PDU Len: %d, Message: %s\n",
               messageLen + 2, pduLen, buff);

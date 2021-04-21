@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
 	  // wait for client to connect
 	  clientSocket = tcpAccept(serverSocket, DEBUG_FLAG);
 
-	  if(myRecive(clientSocket) < 0)
+	  if(myRecive(clientSocket) <= 0)
 		{
 			/* close the sockets */
 			close(clientSocket);
