@@ -33,13 +33,13 @@ void mySend(int socketNum)
 	    printf("Recv() from server: %s\n", recvBuff);
 
       /* Recieve back message 2. Recieve message*/
-      if((messageLen = recv(socketNum, recvBuff, pduLen, 0)) < 0)
+      if((messageLen = recv(socketNum, recvBuff, MAXBUF, 0)) < 0)
       {
           perror("recv call");
           exit(-1);
       }
 	    printf(
-        "Recv() from server: Number of bytes recieved by the server was %s\n", recvBuff);
+        "Recv() from server: %s\n", recvBuff);
       /* reset variables.*/
       sendLen = 0;
       pduLen = 2;
@@ -62,6 +62,7 @@ void mySend(int socketNum)
 int myRecive(int clientSocket)
 {
   char buff[MAXBUF];
+  char sendBuff[MAXBUF];
   char str[MAXBUF];
 	int messageLen = 0;
   int pduLen = 0;
@@ -96,7 +97,7 @@ int myRecive(int clientSocket)
       else if (messageLen == 0)
       {
           perror("closed connection");
-          exit(-1);
+          return 0;
       }
 
       messageLen = recv(clientSocket, buff, MAXBUF, 0);
@@ -110,11 +111,15 @@ int myRecive(int clientSocket)
       else if (messageLen == 0)
       {
           perror("closed connection");
-          exit(-1);
+          return 0;
       }
 	    printf("recv() Len: %d, PDU Len: %d, Message: %s\n",
               messageLen + 2, pduLen, buff);
+
+      char mess[50] = "Number of bytes recived by the server was ";
+      memcpy(sendBuff, mess, strlen(mess) + 1);
       sprintf(str, "%d", messageLen);
+      memcpy(sendBuff + strlen(sendBuff), str, strlen(str) + 1);
       /* Sending back the text message*/
       if((sent = send(clientSocket, buff, pduLen, 0)) < 0)
       {
@@ -123,7 +128,7 @@ int myRecive(int clientSocket)
 
       }
       /* Sending number of bytes recieved by the server.*/
-      if((sent = send(clientSocket, str, pduLen, 0)) < 0)
+      if((sent = send(clientSocket, sendBuff, MAXBUF, 0)) < 0)
       {
           perror("sent 2nd PDU error");
           exit(-1);

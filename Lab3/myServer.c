@@ -35,15 +35,15 @@ int main(int argc, char *argv[])
 
 	portNumber = checkArgs(argc, argv);
 
-	//create the server socket
-	serverSocket = tcpServerSetup(portNumber);
-	// Recieves multiple clients 
+	// Recieves multiple clients
   while(1)
 	{
+		//create the server socket
+		serverSocket = tcpServerSetup(portNumber);
 	  // wait for client to connect
 	  clientSocket = tcpAccept(serverSocket, DEBUG_FLAG);
 
-	  if(myRecive(clientSocket) <= 0)
+	  if(myRecive(clientSocket) < 0)
 		{
 			/* close the sockets */
 			close(clientSocket);
