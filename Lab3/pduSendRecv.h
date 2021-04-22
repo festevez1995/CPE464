@@ -9,7 +9,5 @@
 #define PDU_LEN_BYTES 2
 #define MAXBUF 1024
 
-
-void mySend(int socketNum);
-int myRecive(int clientSocket);
-int readFromStdin(char * buffer);
+int myRecieve(int clientSocket);
+void mySend(int socketNum, char *pdu, uint16_t pduLen);

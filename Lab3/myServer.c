@@ -32,24 +32,45 @@ int main(int argc, char *argv[])
 	int serverSocket = 0;   //socket descriptor for the server socket
 	int clientSocket = 0;   //socket descriptor for the client socket
 	int portNumber = 0;
-    int code = 0;
+  int code = 0;
+	struct sockaddr socketAddr;
+	socklen_t addrLen;
+  int acceptCode = 0;
 
 	portNumber = checkArgs(argc, argv);
-    serverSocket = tcpServerSetup(portNumber);
-
+  serverSocket = tcpServerSetup(portNumber);
+	setupPollSet();
+	addToPollSet(serverSocket);
 	// Recieves multiple clients
   while(1)
 	{
 	 // wait for client to connect
-	  clientSocket = tcpAccept(serverSocket, DEBUG_FLAG);
-      
-	  if((code = myRecive(clientSocket)) <= 0)
-	  {
-            printf("%d\n", code);
-			/* close the sockets */
-			close(clientSocket);
-            serverSocket = tcpServerSetup(portNumber);
-	  }
+	  //clientSocket = tcpAccept(serverSocket, DEBUG_FLAG);
+		 if ((clientSocket = pollCall(0)) ==  -1)
+		 {
+		         // exit(-1);
+		 }
+		 else if(clientSocket == serverSocket)
+		 {
+		   if ((acceptCode = accept(clientSocket, &socketAddr, &addrLen)) < 0)
+		   {
+				 perror("Accept call");
+		     return -1;
+		   }
+
+		   addToPollSet(acceptCode);
+		}
+		else
+		{
+			printf("Client: %d connected\n", clientSocket);
+	    if((code = myRecieve(clientSocket)) < 0)
+	    {
+				removeFromPollSet(clientSocket);
+			  /* close the sockets */
+			  close(clientSocket);
+            //serverSocket = tcpServerSetup(portNumber);
+	    }
+		}
   }
 
 	close(serverSocket);

@@ -1,175 +1,89 @@
 #include "pduSendRecv.h"
 
-void mySend(int socketNum)
-{
-  char pdu[MAXBUF];       // PDU buff to hold PDU length and payload
-  char sendBuf[MAXBUF];   //data buffer
-  char recvBuff[MAXBUF];  // data buffer for recieving messages
-  int messageLen = 0;
-	int sendLen = 0;        //amount of data to send
-	int sent = 0;            //actual amount of data sent/* get the data and send it   */
-  int pduLen = 2;          // 2 Bytes of len of header.
-
-  /* Run loop unitl exit key word is recived.*/
-  while(strcmp(sendBuf, "exit") != 0)
-  {
-      sendLen = readFromStdin(sendBuf);
-      pduLen += sendLen; //Calculating pduLen
-
-      memcpy(pdu, &pduLen, PDU_LEN_BYTES);
-      memcpy(&pdu[2], sendBuf, sendLen);
-      /* Send the PDU block.*/
-	    if ((sent = send(socketNum, pdu, pduLen, 0)) < 0)
-	    {
-		      perror("send call");
-		      exit(-1);
-	    }
-      /* Recieve back message 1. Recieve message*/
-      if((messageLen = recv(socketNum, recvBuff, pduLen, MSG_WAITALL)) < 0)
-      {
-          perror("recv call");
-          exit(-1);
-      }
-	    printf("Recv() from server: %s\n", recvBuff);
-
-      /* Recieve back message 2. Recieve message*/
-      if((messageLen = recv(socketNum, recvBuff, MAXBUF, 0)) < 0)
-      {
-          perror("recv call");
-          exit(-1);
-      }
-	    printf(
-        "Recv() from server: %s\n", recvBuff);
-      /* reset variables.*/
-      sendLen = 0;
-      pduLen = 2;
-      sent = 0;
-  }
-  /* On exit, send the exit message.*/
-  /* pduLen is 2 bytes pluse the size of exit including the null character.*/
-  pduLen = 2 + 5;
-  memcpy(pdu, &pduLen, PDU_LEN_BYTES);
-  memcpy(&pdu[2], "exit\0", sendLen);
-  if ((sent = send(socketNum, pdu, pduLen, 0)) < 0)
-  {
-      perror("send call");
-      exit(-1);
-  }
-}
-
-/* Server recieves message from the client.
- */
-int myRecive(int clientSocket)
+int myRecieve(int clientSocket)
 {
   char buff[MAXBUF];
   char sendBuff[MAXBUF];
   char str[MAXBUF];
-	int messageLen = 0;
   int pduLen = 0;
-  int sent = 0;
-  /* variables used for select().*/
-  struct sockaddr addr;
-  socklen_t addr_len;
-  int val = 0;
-  setupPollSet();
-  addToPollSet(clientSocket); 
+  int mLen = 0;
+  int sent = 0;            //actual amount of data sent/* get the data and send it   */
+
   memset(buff, '\0', MAXBUF);
-  while(strcmp(buff, "exit") != 0)
+
+  //now get the data from the client_socket
+  /* check to see if recv was succesful or if any closed connect occured.*/
+  if ((mLen = recv(clientSocket, &pduLen, LEN_BYTES, MSG_WAITALL)) < 0)
   {
-
-      /*t.tv_sec = 1;
-      t.tv_usec = 0;
-      FD_ZERO(&readfds);
-      FD_SET(clientSocket, &readfds);
-      */
-
-      /* Block until recieve the message.*/
-      if ((val = pollCall(0)) ==  -1)
-      {
-         // exit(-1);
-      }
-      else if(val == clientSocket)
-      {
-           if (accept(clientSocket, &addr, &addr_len) < 0)
-           {
-               return -1;
-           }
-           addToPollSet(clientSocket); 
-
-      }
-      messageLen = recv(clientSocket, &pduLen, LEN_BYTES, MSG_WAITALL);
-      /* check to see if recv was succesful or if any closed connect occured.*/
-	    if (messageLen < 0)
-	    {
-		      perror("recv call");
-		      exit(-1);
-	    }
-      else if (messageLen == 0)
-      {
-          perror("closed connection");
-          return 0;
-      }
-
-      messageLen = recv(clientSocket, buff, MAXBUF, 0);
-      //now get the data from the client_socket
-      /* check to see if recv was succesful or if any closed connect occured.*/
-	    if (messageLen < 0)
-	    {
-		      perror("recv call");
-		      exit(-1);
-	    }
-      else if (messageLen == 0)
-      {
-          perror("closed connection");
-          return 0;
-      }
-	    printf("recv() Len: %d, PDU Len: %d, Message: %s\n",
-              messageLen + 2, pduLen, buff);
-
-      char mess[50] = "Number of bytes recived by the server was ";
-      memcpy(sendBuff, mess, strlen(mess) + 1);
-      sprintf(str, "%d", messageLen);
-      memcpy(sendBuff + strlen(sendBuff), str, strlen(str) + 1);
-      /* Sending back the text message*/
-      if((sent = send(clientSocket, buff, pduLen, 0)) < 0)
-      {
-          perror("sent error");
-          exit(-1);
-
-      }
-      /* Sending number of bytes recieved by the server.*/
-      if((sent = send(clientSocket, sendBuff, MAXBUF, 0)) < 0)
-      {
-          perror("sent 2nd PDU error");
-          exit(-1);
-      }
+      perror("recv call");
+      exit(-1);
   }
+  else if (mLen == 0)
+  {
+      perror("closed connection");
+      return -1;
+  }
+  pduLen = ntohs(pduLen);
+
+  //now get the data from the client_socket
+  /* check to see if recv was succesful or if any closed connect occured.*/
+  if ((mLen = recv(clientSocket, buff, pduLen - 2, 0)) < 0)
+  {
+      perror("recv call");
+      exit(-1);
+  }
+  else if (mLen == 0)
+  {
+      perror("closed connection");
+      return -1;
+  }
+
+  printf("recv() Len: %d, PDU Len: %d, Message: %s\n", mLen+2, pduLen, buff);
+
+  char mess[50] = "Number of bytes recived by the server was ";
+  memcpy(sendBuff, mess, strlen(mess) + 1);
+  sprintf(str, "%d", mLen);
+  memcpy(sendBuff + strlen(sendBuff), str, strlen(str) + 1);
+
+  if ((sent = send(clientSocket, buff, pduLen, 0)) < 0)
+  {
+    perror("send call");
+    exit(-1);
+  }
+
+  if ((sent = send(clientSocket, sendBuff, MAXBUF, 0)) < 0)
+  {
+    perror("send call");
+    exit(-1);
+  }
+
   return 0;
 }
 
-/* Function form myClient.c
- * using this function for my .c file. */
-int readFromStdin(char * buffer)
+/* My impementation for send. */
+void mySend(int socketNum, char *pdu, uint16_t pduLen)
 {
-	char aChar = 0;
-	int inputLen = 0;
+  char recvBuff[MAXBUF];  // data buffer for recieving messages
 
-	// Important you don't input more characters than you have space
-	buffer[0] = '\0';
-	printf("Enter data: ");
-	while (inputLen < (MAXBUF - 1) && aChar != '\n')
-	{
-		aChar = getchar();
-		if (aChar != '\n')
-		{
-			buffer[inputLen] = aChar;
-			inputLen++;
-		}
-	}
+  if (send(socketNum, pdu, pduLen, 0) < 0)
+  {
+    perror("send call");
+    exit(-1);
+  }
+  /* Recieve back message 1. Recieve message*/
+  if(recv(socketNum, recvBuff, pduLen, MSG_WAITALL) < 0)
+  {
+    perror("recv call");
+    exit(-1);
+  }
+	printf("Recv() from server: %s\n", recvBuff);
 
-	// Null terminate the string
-	buffer[inputLen] = '\0';
-	inputLen++;
+  /* Recieve back message 2. Recieve message*/
+  if(recv(socketNum, recvBuff, MAXBUF, 0) < 0)
+  {
+    perror("recv call");
+    exit(-1);
+  }
+	printf("Recv() from server: %s\n", recvBuff);
 
-	return inputLen;
 }
