@@ -3,6 +3,8 @@
 #include <sys/socket.h>
 #include <string.h>
 #include <sys/time.h>
+#include <stdint.h>
+#include <arpa/inet.h>
 #include "pollLib.h"
 
 #define LEN_BYTES 2
@@ -35,5 +37,5 @@ typedef struct PDUHeader
 int myRecieve(int clientSocket, char *chatHeader, char *buff);
 void mySend(int socketNum, char *pdu, uint16_t pduLen);
 
-void creatChatHeader(char *chatHeader, uint16_t pduLen, int flag);
+void creatChatHeader(char *chatHeader, int pduLen, int flag);
 void sendPacket(int socketNum, char *packet, int packetLen);

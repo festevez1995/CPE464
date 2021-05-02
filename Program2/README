@@ -1,1 +1,6 @@
 Fernando Estevez Lab Section Time: 12:10 - 3:00
+
+I got most of the project working. My %l/L doesn't
+always work and for %m how I handle when a message is 
+> 200 I cut it off at 199 and add the null terminating
+character.

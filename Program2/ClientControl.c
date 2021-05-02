@@ -183,7 +183,6 @@ int sendServer(int socketNum)
   {
     return -1;
   }
-  /*TODO--------------REMOVE FLAG FROM Message!*/
   /* Create packet based on flag.*/
   switch(message[flagIdx])
   {
@@ -279,11 +278,12 @@ void buildMessagePacket(int socket, char *packet, char *message)
 
     if((messLen = strlen(outMess)) > 200)
     {
-      outMess[messLen] = '\0';
+      outMess[199] = '\0';
       memcpy(&packet[offset], outMess, M_MESSAGE_BYTES);
       sendPacket(socket, packet, MAXBUF);
-      memcpy(&packet[offset], &outMess[200], M_MESSAGE_BYTES);
-      sendPacket(socket, packet, MAXBUF);
+     // outMess[messLen] = '\0';
+     // memcpy(&packet[offset], &outMess[200], M_MESSAGE_BYTES);
+      //sendPacket(socket, packet, MAXBUF);
     }
     else
     {
@@ -307,6 +307,14 @@ int checkMessageFlag(char *message)
     return -1;
   }
 
+  if(errorCheckCmd(message) < 0)
+  {
+    printf("Invalid Command format\n");
+    printf("$: ");
+    fflush(stdout);
+    return -1;
+  }
+
   if(message[1] == 'm' || message[1] == 'M')
   {
     if(atoi(&message[3]) > 9 )
@@ -319,6 +327,43 @@ int checkMessageFlag(char *message)
   }
 
   return 1;
+}
+
+int errorCheckCmd(char *message)
+{
+  int err = 0;
+  switch(message[1])
+  {
+    /* Check to see if they passed a number after the m.*/
+    case 'm':
+    case 'M':
+      /* if next position is not a number*/
+      if(!isdigit(message[3]))
+      {
+        err = -1;
+      }
+      break;
+    /* Check if after % is a brodcast*/
+    case 'b':
+    case 'B':
+      err = 0;
+      break;
+    /* Check if after % is a list all handle cmd.*/
+    case 'l':
+    case 'L':
+      err = 0;     
+      break;
+    /* Check if after % is an exit cmd.*/
+    case 'e':
+    case 'E':
+      err = 0;
+      break;
+    /* If default then we dont have a correct cmd*/
+    default:
+      err = -1;
+      break;
+  }
+return err;
 }
 
 void processRecievedMessage(char *buff)
@@ -356,6 +401,7 @@ void processNumOfHandles(char *buff)
   memcpy(&numOfHandles, buff, 4);
 
   printf("Number of clients: %d\n", ntohs(numOfHandles));
+  fflush(stdout);
 }
 
 void processRegisteredHandles(char *buff)
@@ -366,6 +412,7 @@ void processRegisteredHandles(char *buff)
   memcpy(&handleLen, buff, 1);
   memcpy(handle, &buff[1], 100);
   printf(" %s\n", handle);
+  fflush(stdout);
 
 }
 

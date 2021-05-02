@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/select.h>
+#include <ctype.h>
 
 #include "pduSendRecv.h"
 #include "pollLib.h"
@@ -25,6 +26,7 @@ int sendServer(int socketNum);
 int checkMessageFlag(char *message);
 int readFromStdin(char * buffer);
 int checkFlag(int flag, int clientSocket);
+int errorCheckCmd(char *message);
 void unexistingHandle(char *handle);
 void buildMessagePacket(int socket, char *packet, char *message);
 void processRecievedMessage(char *buff);

@@ -61,7 +61,7 @@ void mySend(int socketNum, char *pdu, uint16_t pduLen)
 
 }
 
-void creatChatHeader(char *chatHeader, uint16_t pduLen, int flag)
+void creatChatHeader(char *chatHeader, int pduLen, int flag)
 {
   /* Convert header len to network byte order.*/
   uint16_t len = htons(pduLen);
