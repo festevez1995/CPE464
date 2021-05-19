@@ -1,12 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <arpa/inet.h>
 
 typedef struct PDUBuff
 {
   uint8_t *pduBuff;
   int pduLen;
-
+  uint32_t seqNum;
 } PDUBuff;
 
 typedef struct Window
@@ -21,9 +22,9 @@ typedef struct Window
 void createWindow(Window *window, int size);
 void deleteWindow(Window *window);
 void slide();
-void makePDU(PDUBuff pdu, uint8_t *buff, int size);
 void addBuffToWindow(Window *window, uint8_t *buff, int pduLen);
-void getBuffFromWindow(Window *window, PDUBuff buff, uint32_t seqNum);
+void handleSREJ(Window *window, uint32_t seqNum);
+void handleRR(Window *window, int flagRR);
 int isWindowClosed(Window *window);
 uint32_t getPDUSeqNum(uint8_t *pduBuff);
 void printWindow(Window *window);
